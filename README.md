@@ -69,6 +69,7 @@ const App = () => {
   - `topK` - Top-K sampling limit (default: model-optimized)
   - `maxTokens` - Maximum tokens to generate (default: 512)
   - `stopSequences` - Array of strings to stop generation (default: undefined)
+- `tools` - Array of Tool objects for function calling (default: undefined)
 - `onToken` - Callback for streaming tokens
 - `model` - Model slug to use (default: initialized model or "qwen3-0.6")
 - `contextSize` - Context size (default: initialized context size or 2048)
@@ -148,11 +149,31 @@ interface Options {
 }
 ```
 
+### Tool
+```typescript
+interface Tool {
+  type: 'function';
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: {
+      [key: string]: {
+        type: string;
+        description: string;
+      };
+    };
+    required: string[];
+  };
+}
+```
+
 ### CactusCompletionParams
 ```typescript
 interface CactusCompletionParams {
   messages: Message[];
   options?: Options;
+  tools?: Tool[];
   onToken?: (token: string) => void;
   model?: string;
   contextSize?: number;
@@ -164,9 +185,12 @@ interface CactusCompletionParams {
 interface CactusCompletionResult {
   success: boolean;
   response: string;
+  functionCalls?: { name: string; arguments: { [key: string]: any } }[];
   timeToFirstTokenMs: number;
   totalTimeMs: number;
   tokensPerSecond: number;
+  prefillTokens: number;
+  decodeTokens: number;
   totalTokens: number;
 }
 ```

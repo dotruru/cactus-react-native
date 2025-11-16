@@ -1,6 +1,11 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Cactus as CactusSpec } from '../specs/Cactus.nitro';
-import type { Message, Options } from '../types/CactusLM';
+import type {
+  CactusCompletionResult,
+  Message,
+  Options,
+  Tool,
+} from '../types/CactusLM';
 
 export class Cactus {
   private readonly hybridCactus =
@@ -14,17 +19,9 @@ export class Cactus {
     messages: Message[],
     responseBufferSize: number,
     options?: Options,
+    tools?: Tool[],
     callback?: (token: string, tokenId: number) => void
-  ): Promise<{
-    success: boolean;
-    response: string;
-    timeToFirstTokenMs: number;
-    totalTimeMs: number;
-    tokensPerSecond: number;
-    prefillTokens: number;
-    decodeTokens: number;
-    totalTokens: number;
-  }> {
+  ): Promise<CactusCompletionResult> {
     const messagesJson = JSON.stringify(messages);
     const optionsJson = options
       ? JSON.stringify({
@@ -35,12 +32,13 @@ export class Cactus {
           stop_sequences: options.stopSequences,
         })
       : undefined;
+    const toolsJson = JSON.stringify(tools);
 
     const response = await this.hybridCactus.complete(
       messagesJson,
       responseBufferSize,
       optionsJson,
-      undefined,
+      toolsJson,
       callback
     );
 
@@ -50,6 +48,7 @@ export class Cactus {
       return {
         success: parsed.success,
         response: parsed.response,
+        functionCalls: parsed.function_calls,
         timeToFirstTokenMs: parsed.time_to_first_token_ms,
         totalTimeMs: parsed.total_time_ms,
         tokensPerSecond: parsed.tokens_per_second,

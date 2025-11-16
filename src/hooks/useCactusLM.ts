@@ -71,6 +71,7 @@ export const useCactusLM = () => {
     async ({
       messages,
       options,
+      tools,
       onToken,
       model,
       contextSize,
@@ -91,6 +92,7 @@ export const useCactusLM = () => {
         return await cactusLMRef.current.complete({
           messages,
           options,
+          tools,
           onToken: (token) => {
             setCompletion((prev) => prev + token);
             onToken?.(token);

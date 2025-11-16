@@ -21,9 +21,26 @@ export interface Options {
   stopSequences?: string[];
 }
 
+export interface Tool {
+  type: 'function';
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: {
+      [key: string]: {
+        type: string;
+        description: string;
+      };
+    };
+    required: string[];
+  };
+}
+
 export interface CactusCompletionParams {
   messages: Message[];
   options?: Options;
+  tools?: Tool[];
   onToken?: (token: string) => void;
   model?: string;
   contextSize?: number;
@@ -32,9 +49,12 @@ export interface CactusCompletionParams {
 export interface CactusCompletionResult {
   success: boolean;
   response: string;
+  functionCalls?: { name: string; arguments: { [key: string]: any } }[];
   timeToFirstTokenMs: number;
   totalTimeMs: number;
   tokensPerSecond: number;
+  prefillTokens: number;
+  decodeTokens: number;
   totalTokens: number;
 }
 

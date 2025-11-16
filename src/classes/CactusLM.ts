@@ -98,6 +98,7 @@ export class CactusLM {
   public async complete({
     messages,
     options,
+    tools,
     onToken,
     model,
     contextSize,
@@ -128,6 +129,7 @@ export class CactusLM {
         messages,
         responseBufferSize,
         options,
+        tools,
         onToken
       );
       Telemetry.logCompletion(

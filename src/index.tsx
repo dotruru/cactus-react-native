@@ -10,6 +10,7 @@ export type {
   CactusInitParams,
   Message,
   Options,
+  Tool,
   CactusCompletionParams,
   CactusCompletionResult,
   CactusEmbeddingParams,

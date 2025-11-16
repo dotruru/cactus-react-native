@@ -96,10 +96,15 @@ export default function App() {
         <Text>Completion Result:</Text>
         <Text>Success: {completionResult?.success ? 'true' : 'false'}</Text>
         <Text>
+          Function Calls: {JSON.stringify(completionResult?.functionCalls)}
+        </Text>
+        <Text>
           Time to First Token (ms): {completionResult?.timeToFirstTokenMs}
         </Text>
         <Text>Total Time (ms): {completionResult?.totalTimeMs}</Text>
         <Text>Tokens per Second: {completionResult?.tokensPerSecond}</Text>
+        <Text>Prefill Tokens: {completionResult?.prefillTokens}</Text>
+        <Text>Decode Tokens: {completionResult?.decodeTokens}</Text>
         <Text>Total Tokens: {completionResult?.totalTokens}</Text>
         <Text>Response: </Text>
         <ScrollView>
