@@ -1,97 +1,122 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# FieldMind v3 🏗️
 
-# Getting Started
+**Offline-First AI Field Assistant for Construction Sites**
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+An intelligent mobile application that enables construction workers to capture issues, look up specifications, and share data locally - all without internet connectivity.
 
-## Step 1: Start Metro
+## 📱 Download APK
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+**[⬇️ Download FieldMind APK](./FieldMind-release.apk)** (32 MB)
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+> Click the link above, then click "Download raw file" to get the APK.
 
-```sh
-# Using npm
+## ✨ Features
+
+### 🎤 Voice-Powered Issue Capture
+- Use your device's keyboard voice-to-text to describe issues naturally
+- AI automatically enhances and structures your descriptions
+- Supports multiple languages with automatic translation
+
+### 📸 Vision AI Photo Analysis
+- Take photos of construction issues
+- AI analyzes images and auto-fills issue details (type, severity, location)
+- Identifies structural, electrical, plumbing, HVAC, and safety issues
+
+### 📚 RAG-Powered Spec Lookup
+- Ask questions about specifications in natural language
+- AI searches through local document corpus
+- Get answers translated to your preferred language
+
+### 📡 P2P Local Sharing (WiFi Direct)
+- Share captured issues with nearby devices without internet
+- Create local groups for team collaboration
+- Sync data across multiple Android devices
+
+### 🌐 Multilingual Support
+- English, Spanish, Chinese, Hindi, Arabic, Portuguese, Russian, Japanese, French, German
+- Workers interact in their native language
+- Internal processing and storage in English
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Android device (arm64-v8a architecture)
+- Android 8.0 or higher
+- ~500MB free storage for AI models
+
+### Installation
+1. Download the APK from the link above
+2. Enable "Install from unknown sources" in Android settings
+3. Open the APK file to install
+4. Grant required permissions (camera, microphone, location for P2P)
+
+### First Launch
+1. The app will download AI models on first use (~400MB)
+2. Wait for models to initialize (shown on home screen)
+3. Start capturing issues or querying specs!
+
+## 🛠️ Development
+
+### Tech Stack
+- **React Native 0.81** - Cross-platform mobile framework
+- **cactus-react-native** - On-device AI inference (LLM, Vision, RAG)
+- **op-sqlite** - Local SQLite database
+- **react-native-wifi-p2p** - WiFi Direct for P2P sharing
+- **React Navigation** - Screen navigation
+
+### Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/ArunaganesanSwaminworker/cactus-react-native.git
+cd cactus-react-native/FieldMind
+
+# Install dependencies
+npm install
+
+# Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# Build and run on Android
 npm run android
 
-# OR using Yarn
-yarn android
+# Build release APK
+cd android && ./gradlew assembleRelease
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+### Project Structure
+```
+FieldMind/
+├── src/
+│   ├── screens/          # App screens (Home, Capture, Query, Issues, etc.)
+│   ├── services/         # Core services (Database, P2P, Vision, etc.)
+│   ├── config/           # Theme and constants
+│   ├── models/           # Data models
+│   └── utils/            # Utility functions
+├── android/              # Android native code
+└── ios/                  # iOS native code (not yet configured)
 ```
 
-Then, and every time you update your native dependencies, run:
+## 📋 Permissions Required
 
-```sh
-bundle exec pod install
-```
+| Permission | Purpose |
+|------------|---------|
+| Camera | Capture photos of issues |
+| Microphone | Voice input via keyboard |
+| Storage | Save photos and database |
+| Location | WiFi Direct P2P discovery |
+| Nearby Devices | P2P communication |
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 🔒 Privacy & Offline
 
-```sh
-# Using npm
-npm run ios
+- **100% Offline**: All AI processing happens on-device
+- **No Cloud Required**: Data never leaves your device unless you share via P2P
+- **Local Storage**: Issues and photos stored in local SQLite database
 
-# OR using Yarn
-yarn ios
-```
+## 📄 License
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+This project is part of the cactus-react-native ecosystem.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+---
 
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Built with ❤️ for construction workers worldwide
