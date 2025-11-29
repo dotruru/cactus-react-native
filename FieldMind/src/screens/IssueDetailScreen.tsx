@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DatabaseService, { type Issue } from '../services/DatabaseService';
+import { theme } from '../config/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -24,9 +25,9 @@ interface Props {
 }
 
 const SEVERITY_COLORS = {
-  low: '#4CAF50',
-  medium: '#FF9800',
-  high: '#f44336',
+  low: theme.colors.status.success,
+  medium: theme.colors.status.warning,
+  high: theme.colors.status.error,
   critical: '#9C27B0',
 };
 
@@ -124,9 +125,7 @@ const IssueDetailScreen = ({ navigation, route }: Props) => {
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Issue Details</Text>
-        <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -278,6 +277,11 @@ const IssueDetailScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
+        {/* Delete Button */}
+        <TouchableOpacity style={styles.deleteButtonBottom} onPress={handleDelete}>
+          <Text style={styles.deleteButtonText}>Delete Issue</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -287,7 +291,7 @@ const IssueDetailScreen = ({ navigation, route }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -296,25 +300,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
   },
   backText: {
-    color: '#1976d2',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   deleteButton: {
     padding: 4,
   },
   deleteText: {
-    color: '#f44336',
+    color: theme.colors.status.error,
     fontSize: 14,
   },
   loadingContainer: {
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   content: {
@@ -343,7 +348,7 @@ const styles = StyleSheet.create({
   syncBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -361,12 +366,13 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
     marginBottom: 12,
   },
   photosScroll: {
@@ -376,6 +382,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderRadius: 8,
     overflow: 'hidden',
+    ...theme.shadows.card,
   },
   photo: {
     width: 120,
@@ -405,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   photoModalHint: {
-    color: '#888',
+    color: '#fff',
     fontSize: 14,
     marginTop: 16,
   },
@@ -416,7 +423,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   photoNavButton: {
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -435,58 +442,77 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoLabel: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 14,
     width: 80,
   },
   infoValue: {
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontSize: 14,
     flex: 1,
   },
   infoValueSmall: {
-    color: '#666',
+    color: theme.colors.text.hint,
     fontSize: 12,
     flex: 1,
   },
   locationText: {
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontSize: 16,
   },
   zoneText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 14,
     marginTop: 4,
   },
   descriptionText: {
-    color: '#ddd',
+    color: theme.colors.text.primary,
     fontSize: 15,
     lineHeight: 24,
   },
   originalBox: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#F5F5F5',
     padding: 12,
     borderRadius: 8,
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   originalLabel: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 12,
     marginBottom: 4,
   },
   originalText: {
-    color: '#aaa',
+    color: theme.colors.text.secondary,
     fontSize: 14,
     fontStyle: 'italic',
   },
   actionText: {
-    color: '#FF9800',
+    color: theme.colors.status.warning,
     fontSize: 15,
     lineHeight: 22,
+    fontWeight: '500',
   },
   assignedText: {
-    color: '#4CAF50',
+    color: theme.colors.status.success,
     fontSize: 15,
+    fontWeight: '500',
+  },
+  deleteButtonBottom: {
+    marginTop: 24,
+    marginHorizontal: 16,
+    backgroundColor: '#FFEBEE',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.status.error,
+  },
+  deleteButtonText: {
+    color: theme.colors.status.error,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

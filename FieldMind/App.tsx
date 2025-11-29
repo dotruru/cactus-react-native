@@ -14,6 +14,8 @@ import IssueDetailScreen from './src/screens/IssueDetailScreen';
 import SharingScreen from './src/screens/SharingScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 
+import { theme } from './src/config/theme';
+
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
@@ -25,7 +27,7 @@ function App(): React.JSX.Element {
             <Stack.Navigator
               screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: '#0a0a1a' },
+                contentStyle: { backgroundColor: theme.colors.background },
                 animation: 'slide_from_right',
               }}
             >

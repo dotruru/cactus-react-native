@@ -8,19 +8,21 @@ import {
   TextInput,
   RefreshControl,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import DatabaseService, { type Issue } from '../services/DatabaseService';
+import { theme } from '../config/theme';
 
 interface Props {
   navigation: any;
 }
 
 const SEVERITY_COLORS = {
-  low: '#4CAF50',
-  medium: '#FF9800',
-  high: '#f44336',
+  low: theme.colors.status.success,
+  medium: theme.colors.status.warning,
+  high: theme.colors.status.error,
   critical: '#9C27B0',
 };
 
@@ -165,12 +167,7 @@ const IssuesScreen = ({ navigation }: Props) => {
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Issues</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => navigation.navigate('Capture')}
-        >
-          <Text style={styles.addButtonText}>+ New</Text>
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
       </View>
 
       {/* Search */}
@@ -249,6 +246,15 @@ const IssuesScreen = ({ navigation }: Props) => {
         }
       />
 
+      {/* Floating Add Button */}
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => navigation.navigate('Capture')}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabText}>+ New Issue</Text>
+      </TouchableOpacity>
+
       {/* Long press hint */}
       {issues.length > 0 && (
         <View style={styles.hintBar}>
@@ -262,7 +268,7 @@ const IssuesScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -271,22 +277,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
   },
   backText: {
-    color: '#1976d2',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   addButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.secondary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -301,11 +308,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   searchInput: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    color: '#fff',
+    color: theme.colors.text.primary,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   filtersContainer: {
     flexDirection: 'row',
@@ -317,13 +326,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   filterChipActive: {
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   filterText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 14,
   },
   filterTextActive: {
@@ -337,19 +349,22 @@ const styles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     padding: 12,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.card,
   },
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   listContent: {
@@ -357,10 +372,13 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   issueCard: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+    ...theme.shadows.card,
   },
   issueHeader: {
     flexDirection: 'row',
@@ -398,16 +416,16 @@ const styles = StyleSheet.create({
   },
   syncText: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
   },
   issueLocation: {
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginBottom: 6,
   },
   issueDescription: {
     fontSize: 15,
-    color: '#ddd',
+    color: theme.colors.text.primary,
     lineHeight: 22,
   },
   issueFooter: {
@@ -417,15 +435,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#2a2a4a',
+    borderTopColor: theme.colors.border,
   },
   issueTime: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.text.secondary,
   },
   photoCount: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
   },
   emptyState: {
     alignItems: 'center',
@@ -438,23 +456,39 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   hintBar: {
     padding: 8,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#1a1a2e',
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   hintText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.colors.text.secondary,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80,
+    right: 20,
+    backgroundColor: theme.colors.secondary,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
+    ...theme.shadows.float,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

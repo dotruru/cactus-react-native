@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import P2PService, { type P2PPeer, type P2PMessage } from '../services/P2PService';
 import DatabaseService from '../services/DatabaseService';
+import { theme } from '../config/theme';
 
 interface Props {
   navigation: any;
@@ -354,7 +355,7 @@ const SharingScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -363,19 +364,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
   },
   backText: {
-    color: '#1976d2',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   centerContainer: {
     flex: 1,
@@ -383,7 +385,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   initText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 16,
   },
   content: {
@@ -391,23 +393,26 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statusCard: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+    ...theme.shadows.card,
   },
   statusText: {
     fontSize: 20,
     fontWeight: 'bold',
   },
   deviceName: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 14,
     marginTop: 8,
   },
   connectionDetail: {
-    color: '#666',
+    color: theme.colors.text.secondary,
     fontSize: 12,
     marginTop: 4,
   },
@@ -418,19 +423,22 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     padding: 12,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.card,
   },
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 4,
   },
   actionsContainer: {
@@ -438,19 +446,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionButton: {
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
     padding: 14,
     borderRadius: 12,
     alignItems: 'center',
   },
   hostButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.secondary,
   },
   alertButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: theme.colors.status.warning,
   },
   stopButton: {
-    backgroundColor: '#666',
+    backgroundColor: theme.colors.text.secondary,
   },
   actionButtonText: {
     color: '#fff',
@@ -464,7 +472,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
     marginBottom: 12,
   },
   peersList: {
@@ -474,26 +482,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   peerInfo: {
     flex: 1,
   },
   peerName: {
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontSize: 16,
     fontWeight: '500',
   },
   peerAddress: {
-    color: '#666',
+    color: theme.colors.text.secondary,
     fontSize: 12,
     marginTop: 2,
   },
   connectText: {
-    color: '#1976d2',
+    color: theme.colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -502,61 +512,67 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   emptyText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 12,
   },
   hintText: {
-    color: '#666',
+    color: theme.colors.text.hint,
     fontSize: 12,
     textAlign: 'center',
     marginTop: 8,
   },
   lastMessageCard: {
-    backgroundColor: '#1a237e',
+    backgroundColor: '#E3F2FD',
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   lastMessageLabel: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 12,
   },
   lastMessageText: {
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontSize: 14,
     marginTop: 4,
   },
   instructionsCard: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#F5F5F5',
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   instructionsTitle: {
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
   },
   instructionsText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 14,
     lineHeight: 22,
   },
   waitingCard: {
-    backgroundColor: '#1a237e',
+    backgroundColor: '#E3F2FD',
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
   },
   waitingText: {
-    color: '#fff',
+    color: theme.colors.primary,
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
   },
   waitingHint: {
-    color: '#aaa',
+    color: theme.colors.text.secondary,
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,

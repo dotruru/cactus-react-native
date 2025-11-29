@@ -40,7 +40,16 @@ class VisionService {
       console.log('VisionService: Analysis complete, response:', result.response?.substring(0, 100));
 
       // Parse the response to extract structured data
-      const response = result.response || 'Unable to analyze image';
+      let response = result.response || 'Unable to analyze image';
+      
+      // Clean markdown formatting
+      response = response
+        .replace(/<\|[^>]+\|>/g, '')  // Remove LLM artifacts
+        .replace(/\*\*/g, '')          // Remove bold markdown
+        .replace(/\*/g, '')            // Remove italic markdown
+        .replace(/#{1,6}\s/g, '')      // Remove heading markdown
+        .replace(/`/g, '')             // Remove code markdown
+        .trim();
       
       return {
         description: response,

@@ -15,6 +15,34 @@ import { useCactusLM, type Message, type CactusLMCompleteResult } from 'cactus-r
 import { useLanguage } from '../hooks/useLanguage';
 import { SUPPORTED_LANGUAGES } from '../utils/languageCodes';
 import { DocumentDirectoryPath, exists, mkdir, writeFile } from '@dr.pogodin/react-native-fs';
+import { theme } from '../config/theme';
+
+// Icons
+const Icons = {
+  search: '🔍',
+  book: '📚',
+  globe: '🌐',
+  send: '➤',
+  clear: '✕',
+  info: 'ℹ',
+  check: '✓',
+  warning: '⚠',
+};
+
+// Helper to render text with **bold** markdown
+const renderFormattedText = (text: string, baseStyle: any) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <Text key={index} style={[baseStyle, { fontWeight: 'bold' }]}>
+          {part.slice(2, -2)}
+        </Text>
+      );
+    }
+    return <Text key={index} style={baseStyle}>{part}</Text>;
+  });
+};
 
 interface ChatMessage {
   id: string;
@@ -169,9 +197,8 @@ Branch Drains:
   };
 
   // Use the RAG-specific model with corpus directory
-  // IMPORTANT: corpusDir must be set before this hook runs
   const lm = useCactusLM({
-    model: 'lfm2-1.2b-rag',  // RAG-specific model
+    model: 'lfm2-1.2b-rag',
     corpusDir: corpusDir || undefined,
   });
 
@@ -214,18 +241,19 @@ Branch Drains:
     setInputText('');
 
     try {
-      // Build prompt based on user's language preference
       const targetLang = getLanguageName();
       const needsTranslation = currentLanguage !== 'en';
       
-      // For non-English, we add translation instruction directly to the user message
-      // This is more effective than system prompt for smaller models
-      const systemPrompt = `Answer construction spec questions. Be direct, factual. Include measurements. Max 2 sentences. No greetings.`;
+      // More specific system prompt that references the documents
+      const systemPrompt = `You are a construction assistant with access to project specs.
+Available documents: electrical panel schedule, rebar schedule, HVAC specs, plumbing riser diagram.
+Answer questions using ONLY information from these documents.
+Be direct and factual. Include specific measurements and values.
+Max 2 sentences. No greetings or filler.`;
       
       let userContent = currentInput;
       if (needsTranslation) {
-        // Add explicit translation instruction at the end of user message
-        userContent = `${currentInput}\n\n[IMPORTANT: Answer in ${targetLang} language only. Translate all technical terms.]`;
+        userContent = `${currentInput}\n\n[Respond in ${targetLang}]`;
       }
 
       const apiMessages: Message[] = [
@@ -234,15 +262,32 @@ Branch Drains:
       ];
 
       console.log('Calling complete with RAG, language:', targetLang);
-      const completionResult = await lm.complete({ messages: apiMessages });
-      console.log('RAG Complete result:', completionResult);
+      let completionResult;
+      try {
+        completionResult = await lm.complete({ messages: apiMessages });
+        console.log('RAG Complete result:', completionResult);
+      } catch (e) {
+        console.warn('RAG failed, retrying with simpler prompt:', e);
+        // Simpler retry without system prompt
+        completionResult = await lm.complete({
+          messages: [
+            { role: 'user', content: `Based on the construction specs, answer briefly: ${currentInput}` }
+          ]
+        });
+        console.log('RAG Retry result:', completionResult);
+      }
+      
       setResult(completionResult);
 
-      // Clean up response - remove any LLM artifacts
+      // Clean up response
       let cleanResponse = completionResult.response || '';
       cleanResponse = cleanResponse.replace(/<\|[^>]+\|>/g, '').trim();
       
-      // Remove common LLM filler phrases
+      // Remove markdown formatting (asterisks for bold)
+      cleanResponse = cleanResponse.replace(/\*\*/g, '');
+      cleanResponse = cleanResponse.replace(/\*/g, '');
+      
+      // Remove filler phrases
       const fillerPatterns = [
         /^(Sure|Of course|Certainly|Here's|I'd be happy to|Based on)[,!.]?\s*/i,
         /^(According to the documents?|The documents? (show|indicate|state))[,:]?\s*/i,
@@ -251,7 +296,7 @@ Branch Drains:
         cleanResponse = cleanResponse.replace(pattern, '');
       }
 
-      // If translation was requested but response is still in English, do a separate translation
+      // Translate if needed
       if (needsTranslation && cleanResponse && /^[a-zA-Z0-9\s.,'":\-\/()]+$/.test(cleanResponse)) {
         console.log('Response appears to be English, translating to', targetLang);
         try {
@@ -262,17 +307,20 @@ Branch Drains:
           });
           if (translateResult.response) {
             let translated = translateResult.response.replace(/<\|[^>]+\|>/g, '').trim();
-            // Remove any "Translation:" prefix
             translated = translated.replace(/^(Translation|Translated|Here'?s?)[:\s]*/i, '');
+            // Also strip markdown from translation
+            translated = translated.replace(/\*\*/g, '').replace(/\*/g, '');
             if (translated) {
               cleanResponse = translated;
-              console.log('Translated response:', cleanResponse);
             }
           }
         } catch (translateError) {
-          console.log('Translation failed, using English:', translateError);
+          console.log('Translation failed:', translateError);
         }
       }
+
+      // Reset LM to clear streaming text before adding message
+      lm.reset();
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -312,7 +360,7 @@ Branch Drains:
           <View style={{ width: 60 }} />
         </View>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#1976d2" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.progressText}>Setting up document corpus...</Text>
         </View>
       </SafeAreaView>
@@ -331,7 +379,7 @@ Branch Drains:
           <View style={{ width: 60 }} />
         </View>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#1976d2" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.progressText}>
             Downloading RAG model: {Math.round(lm.downloadProgress * 100)}%
           </Text>
@@ -353,15 +401,26 @@ Branch Drains:
         </TouchableOpacity>
       </View>
 
-      {/* RAG Status Bar */}
-      <View style={styles.ragBar}>
-        <Text style={styles.ragText}>
-          📚 4 specs • 🌐 {getLanguageName()}
+      {/* Feature Explanation Bar */}
+      <View style={styles.explainerBar}>
+        <Text style={styles.explainerIcon}>{Icons.info}</Text>
+        <Text style={styles.explainerText}>
+          Ask questions about specs • AI searches documents • Works offline
         </Text>
       </View>
 
+      {/* RAG Status Bar */}
+      <View style={styles.ragBar}>
+        <View style={styles.ragBadge}>
+          <Text style={styles.ragBadgeText}>{Icons.book} 4 specs loaded</Text>
+        </View>
+        <View style={styles.ragBadge}>
+          <Text style={styles.ragBadgeText}>{Icons.globe} {getLanguageName()}</Text>
+        </View>
+      </View>
+
       {/* Init button */}
-      {lm.isDownloaded && (
+      {lm.isDownloaded && !lm.isInitialized && (
         <View style={styles.initBar}>
           <TouchableOpacity 
             style={[styles.initButton, lm.isInitializing && styles.initButtonDisabled]} 
@@ -374,16 +433,16 @@ Branch Drains:
                 <Text style={styles.initButtonText}> Initializing...</Text>
               </>
             ) : (
-              <Text style={styles.initButtonText}>Init RAG Model</Text>
+              <Text style={styles.initButtonText}>{Icons.check} Initialize RAG</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.initHint}>Tap Init before first query</Text>
+          <Text style={styles.initHint}>Tap to start using spec lookup</Text>
         </View>
       )}
 
       {lm.error && (
         <View style={styles.errorBar}>
-          <Text style={styles.errorText}>Error: {lm.error}</Text>
+          <Text style={styles.errorText}>{Icons.warning} {lm.error}</Text>
         </View>
       )}
 
@@ -400,17 +459,39 @@ Branch Drains:
         >
           {messages.length === 0 && (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>🔍</Text>
-              <Text style={styles.emptyTitle}>Ask about specs</Text>
+              <View style={styles.emptyIconContainer}>
+                <Text style={styles.emptyIcon}>{Icons.search}</Text>
+              </View>
+              <Text style={styles.emptyTitle}>Ask about project specs</Text>
               <Text style={styles.emptyText}>
-                Ask in any language. Answers in {getLanguageName()}.
+                Questions answered from your documents.{'\n'}Responses in {getLanguageName()}.
               </Text>
               <View style={styles.exampleQueries}>
-                <Text style={styles.exampleTitle}>Try asking:</Text>
-                <Text style={styles.exampleText}>• Conduit size for Zone C?</Text>
-                <Text style={styles.exampleText}>• Rebar spacing, corridor B slab?</Text>
-                <Text style={styles.exampleText}>• AHU-1 capacity?</Text>
-                <Text style={styles.exampleText}>• Main water supply size?</Text>
+                <Text style={styles.exampleTitle}>Example questions:</Text>
+                <TouchableOpacity 
+                  style={styles.exampleItem}
+                  onPress={() => setInputText('What is the conduit size for Zone C?')}
+                >
+                  <Text style={styles.exampleText}>• Conduit size for Zone C?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.exampleItem}
+                  onPress={() => setInputText('Rebar spacing for corridor B slab?')}
+                >
+                  <Text style={styles.exampleText}>• Rebar spacing, corridor B slab?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.exampleItem}
+                  onPress={() => setInputText('What is AHU-1 capacity?')}
+                >
+                  <Text style={styles.exampleText}>• AHU-1 capacity?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.exampleItem}
+                  onPress={() => setInputText('Main water supply size?')}
+                >
+                  <Text style={styles.exampleText}>• Main water supply size?</Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -429,13 +510,16 @@ Branch Drains:
               ]}>
                 {message.content}
               </Text>
-              <Text style={styles.timestamp}>
+              <Text style={[
+                styles.timestamp,
+                message.role === 'user' ? styles.userTimestamp : styles.assistantTimestamp
+              ]}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
           ))}
 
-          {/* Streaming text from hook */}
+          {/* Streaming text */}
           {lm.completion && (
             <View style={[styles.messageBubble, styles.assistantBubble]}>
               <Text style={[styles.messageText, styles.assistantText]}>
@@ -447,7 +531,7 @@ Branch Drains:
 
           {lm.isGenerating && !lm.completion && (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#1976d2" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
               <Text style={styles.loadingText}>Searching specs...</Text>
             </View>
           )}
@@ -458,8 +542,8 @@ Branch Drains:
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Ask in any language...`}
-            placeholderTextColor="#666"
+            placeholder="Ask about specs..."
+            placeholderTextColor={theme.colors.text.hint}
             multiline
             maxLength={500}
             editable={!lm.isGenerating}
@@ -473,7 +557,7 @@ Branch Drains:
             disabled={!inputText.trim() || lm.isGenerating}
           >
             <Text style={styles.sendButtonText}>
-              {lm.isGenerating ? '...' : 'Ask'}
+              {lm.isGenerating ? '...' : Icons.send}
             </Text>
           </TouchableOpacity>
         </View>
@@ -485,7 +569,7 @@ Branch Drains:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -494,20 +578,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
     width: 60,
   },
   backText: {
-    color: '#1976d2',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   clearButton: {
     padding: 4,
@@ -515,17 +600,43 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   clearText: {
-    color: '#f44336',
+    color: theme.colors.status.error,
     fontSize: 14,
   },
-  ragBar: {
-    backgroundColor: '#1a237e',
-    padding: 8,
+  explainerBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
   },
-  ragText: {
-    color: '#fff',
-    fontSize: 12,
+  explainerIcon: {
+    fontSize: 16,
+  },
+  explainerText: {
+    fontSize: 13,
+    color: theme.colors.primary,
+    flex: 1,
+  },
+  ragBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    padding: 10,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  ragBadge: {
+    backgroundColor: '#F5F7FA',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  ragBadgeText: {
+    color: theme.colors.text.secondary,
+    fontSize: 13,
   },
   centerContainer: {
     flex: 1,
@@ -536,32 +647,32 @@ const styles = StyleSheet.create({
   progressText: {
     marginTop: 16,
     fontSize: 18,
-    color: '#fff',
+    color: theme.colors.text.primary,
     fontWeight: '600',
   },
   progressSubtext: {
     marginTop: 8,
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
   },
   initBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#FFF3E0',
     padding: 12,
     gap: 12,
   },
   initButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.status.success,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
   initButtonDisabled: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#81C784',
   },
   initButtonText: {
     color: '#fff',
@@ -569,15 +680,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   initHint: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     fontSize: 12,
   },
   errorBar: {
-    backgroundColor: '#b71c1c',
+    backgroundColor: '#FFEBEE',
     padding: 12,
   },
   errorText: {
-    color: '#fff',
+    color: theme.colors.status.error,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -595,55 +706,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 40,
   },
-  emptyIcon: {
-    fontSize: 48,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E3F2FD',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  emptyIcon: {
+    fontSize: 36,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
     textAlign: 'center',
     paddingHorizontal: 20,
+    lineHeight: 20,
   },
   exampleQueries: {
     marginTop: 24,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     padding: 16,
     borderRadius: 12,
     width: '100%',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   exampleTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#888',
-    marginBottom: 8,
+    color: theme.colors.text.secondary,
+    marginBottom: 12,
+  },
+  exampleItem: {
+    paddingVertical: 8,
   },
   exampleText: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    color: theme.colors.primary,
   },
   messageBubble: {
     maxWidth: '85%',
-    padding: 12,
+    padding: 14,
     borderRadius: 16,
     marginBottom: 12,
   },
   userBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   messageText: {
     fontSize: 15,
@@ -653,16 +779,21 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   assistantText: {
-    color: '#ddd',
+    color: theme.colors.text.primary,
   },
   timestamp: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 4,
+    marginTop: 6,
     alignSelf: 'flex-end',
   },
+  userTimestamp: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  assistantTimestamp: {
+    color: theme.colors.text.hint,
+  },
   cursor: {
-    color: '#1976d2',
+    color: theme.colors.primary,
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -670,7 +801,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   loadingText: {
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginLeft: 8,
   },
   inputContainer: {
@@ -678,32 +809,37 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: '#1a1a2e',
-    backgroundColor: '#0a0a1a',
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   input: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#F5F7FA',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#fff',
+    color: theme.colors.text.primary,
     maxHeight: 100,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   sendButton: {
-    backgroundColor: '#1976d2',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: theme.colors.primary,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#333',
+    backgroundColor: '#CFD8DC',
   },
   sendButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 18,
   },
 });
 

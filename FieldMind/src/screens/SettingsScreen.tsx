@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCactusSTT, useCactusLM } from 'cactus-react-native';
+import { useCactusLM } from 'cactus-react-native';
 import { useLanguage } from '../hooks/useLanguage';
 import { SUPPORTED_LANGUAGES } from '../utils/languageCodes';
+import { theme } from '../config/theme';
 
 interface Props {
   navigation: any;
@@ -21,62 +22,63 @@ interface Props {
 const SettingsScreen = ({ navigation }: Props) => {
   const { currentLanguage, setLanguage } = useLanguage();
   
-  // AI Models
-  const stt = useCactusSTT({ model: 'whisper-tiny' });
-  const lm = useCactusLM({ model: 'qwen3-0.6' });
+  // Vision Model (Capture)
+  const visionLm = useCactusLM({ model: 'lfm2-vl-450m' });
+  // RAG Model (Query)
+  const ragLm = useCactusLM({ model: 'lfm2-1.2b-rag' });
   
-  const [sttReady, setSttReady] = useState(false);
-  const [lmReady, setLmReady] = useState(false);
+  const [visionReady, setVisionReady] = useState(false);
+  const [ragReady, setRagReady] = useState(false);
   
   // Settings
   const [autoSync, setAutoSync] = useState(true);
   const [hapticFeedback, setHapticFeedback] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
 
-  const handleDownloadSTT = async () => {
+  const handleDownloadVision = async () => {
     try {
-      await stt.download();
+      await visionLm.download();
     } catch (e) {
-      Alert.alert('Error', 'Failed to download voice model');
+      Alert.alert('Error', 'Failed to download vision model');
     }
   };
 
-  const handleInitSTT = async () => {
+  const handleInitVision = async () => {
     try {
-      await stt.init();
-      setSttReady(true);
+      await visionLm.init();
+      setVisionReady(true);
     } catch (e) {
-      Alert.alert('Error', 'Failed to initialize voice model');
+      Alert.alert('Error', 'Failed to initialize vision model');
     }
   };
 
-  const handleDownloadLM = async () => {
+  const handleDownloadRAG = async () => {
     try {
-      await lm.download();
+      await ragLm.download();
     } catch (e) {
-      Alert.alert('Error', 'Failed to download language model');
+      Alert.alert('Error', 'Failed to download RAG model');
     }
   };
 
-  const handleInitLM = async () => {
+  const handleInitRAG = async () => {
     try {
-      await lm.init();
-      setLmReady(true);
+      await ragLm.init();
+      setRagReady(true);
     } catch (e) {
-      Alert.alert('Error', 'Failed to initialize language model');
+      Alert.alert('Error', 'Failed to initialize RAG model');
     }
   };
 
   const getModelStatus = (isDownloading: boolean, isDownloaded: boolean, isInitializing: boolean, isReady: boolean, progress: number) => {
-    if (isReady) return { text: 'Ready', color: '#4CAF50' };
-    if (isInitializing) return { text: 'Initializing...', color: '#2196F3' };
-    if (isDownloading) return { text: `Downloading ${Math.round(progress * 100)}%`, color: '#FF9800' };
-    if (isDownloaded) return { text: 'Downloaded', color: '#9E9E9E' };
-    return { text: 'Not Downloaded', color: '#f44336' };
+    if (isReady) return { text: 'Ready', color: theme.colors.status.success };
+    if (isInitializing) return { text: 'Initializing...', color: theme.colors.status.info };
+    if (isDownloading) return { text: `Downloading ${Math.round(progress * 100)}%`, color: theme.colors.status.warning };
+    if (isDownloaded) return { text: 'Downloaded', color: theme.colors.text.secondary };
+    return { text: 'Not Downloaded', color: theme.colors.status.error };
   };
 
-  const sttStatus = getModelStatus(stt.isDownloading, stt.isDownloaded, stt.isInitializing, sttReady, stt.downloadProgress);
-  const lmStatus = getModelStatus(lm.isDownloading, lm.isDownloaded, lm.isInitializing, lmReady, lm.downloadProgress);
+  const visionStatus = getModelStatus(visionLm.isDownloading, visionLm.isDownloaded, visionLm.isInitializing, visionReady, visionLm.downloadProgress);
+  const ragStatus = getModelStatus(ragLm.isDownloading, ragLm.isDownloaded, ragLm.isInitializing, ragReady, ragLm.downloadProgress);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -125,70 +127,70 @@ const SettingsScreen = ({ navigation }: Props) => {
         {/* AI Models Section */}
         <Text style={styles.sectionTitle}>🤖 AI Models</Text>
         
-        {/* STT Model */}
+        {/* Vision Model */}
         <View style={styles.card}>
           <View style={styles.modelHeader}>
             <View>
-              <Text style={styles.modelName}>Voice Recognition</Text>
-              <Text style={styles.modelDescription}>Whisper Tiny (~40MB)</Text>
+              <Text style={styles.modelName}>Vision & Enhance</Text>
+              <Text style={styles.modelDescription}>lfm2-vl-450m (~450MB)</Text>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: sttStatus.color }]}>
-              <Text style={styles.statusBadgeText}>{sttStatus.text}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: visionStatus.color }]}>
+              <Text style={styles.statusBadgeText}>{visionStatus.text}</Text>
             </View>
           </View>
           
           <View style={styles.modelActions}>
-            {!stt.isDownloaded && !stt.isDownloading && (
-              <TouchableOpacity style={styles.actionButton} onPress={handleDownloadSTT}>
+            {!visionLm.isDownloaded && !visionLm.isDownloading && (
+              <TouchableOpacity style={styles.actionButton} onPress={handleDownloadVision}>
                 <Text style={styles.actionButtonText}>Download</Text>
               </TouchableOpacity>
             )}
-            {stt.isDownloading && (
+            {visionLm.isDownloading && (
               <View style={styles.progressContainer}>
-                <View style={[styles.progressBar, { width: `${stt.downloadProgress * 100}%` }]} />
+                <View style={[styles.progressBar, { width: `${visionLm.downloadProgress * 100}%` }]} />
               </View>
             )}
-            {stt.isDownloaded && !sttReady && !stt.isInitializing && (
-              <TouchableOpacity style={styles.actionButton} onPress={handleInitSTT}>
+            {visionLm.isDownloaded && !visionReady && !visionLm.isInitializing && (
+              <TouchableOpacity style={styles.actionButton} onPress={handleInitVision}>
                 <Text style={styles.actionButtonText}>Initialize</Text>
               </TouchableOpacity>
             )}
-            {stt.isInitializing && (
-              <ActivityIndicator size="small" color="#1976d2" />
+            {visionLm.isInitializing && (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             )}
           </View>
         </View>
 
-        {/* LM Model */}
+        {/* RAG Model */}
         <View style={styles.card}>
           <View style={styles.modelHeader}>
             <View>
-              <Text style={styles.modelName}>Language Model</Text>
-              <Text style={styles.modelDescription}>Qwen3 0.6B (~400MB)</Text>
+              <Text style={styles.modelName}>Spec Lookup (RAG)</Text>
+              <Text style={styles.modelDescription}>lfm2-1.2b-rag (~800MB)</Text>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: lmStatus.color }]}>
-              <Text style={styles.statusBadgeText}>{lmStatus.text}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: ragStatus.color }]}>
+              <Text style={styles.statusBadgeText}>{ragStatus.text}</Text>
             </View>
           </View>
           
           <View style={styles.modelActions}>
-            {!lm.isDownloaded && !lm.isDownloading && (
-              <TouchableOpacity style={styles.actionButton} onPress={handleDownloadLM}>
+            {!ragLm.isDownloaded && !ragLm.isDownloading && (
+              <TouchableOpacity style={styles.actionButton} onPress={handleDownloadRAG}>
                 <Text style={styles.actionButtonText}>Download</Text>
               </TouchableOpacity>
             )}
-            {lm.isDownloading && (
+            {ragLm.isDownloading && (
               <View style={styles.progressContainer}>
-                <View style={[styles.progressBar, { width: `${lm.downloadProgress * 100}%` }]} />
+                <View style={[styles.progressBar, { width: `${ragLm.downloadProgress * 100}%` }]} />
               </View>
             )}
-            {lm.isDownloaded && !lmReady && !lm.isInitializing && (
-              <TouchableOpacity style={styles.actionButton} onPress={handleInitLM}>
+            {ragLm.isDownloaded && !ragReady && !ragLm.isInitializing && (
+              <TouchableOpacity style={styles.actionButton} onPress={handleInitRAG}>
                 <Text style={styles.actionButtonText}>Initialize</Text>
               </TouchableOpacity>
             )}
-            {lm.isInitializing && (
-              <ActivityIndicator size="small" color="#1976d2" />
+            {ragLm.isInitializing && (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             )}
           </View>
         </View>
@@ -204,7 +206,7 @@ const SettingsScreen = ({ navigation }: Props) => {
             <Switch
               value={autoSync}
               onValueChange={setAutoSync}
-              trackColor={{ false: '#333', true: '#1976d2' }}
+              trackColor={{ false: '#333', true: theme.colors.primary }}
               thumbColor="#fff"
             />
           </View>
@@ -226,7 +228,7 @@ const SettingsScreen = ({ navigation }: Props) => {
               <Text style={styles.settingLabel}>Clear Local Data</Text>
               <Text style={styles.settingDescription}>Remove all local issues</Text>
             </View>
-            <Text style={[styles.settingAction, { color: '#f44336' }]}>Clear</Text>
+            <Text style={[styles.settingAction, { color: theme.colors.status.error }]}>Clear</Text>
           </TouchableOpacity>
         </View>
 
@@ -241,7 +243,7 @@ const SettingsScreen = ({ navigation }: Props) => {
             <Switch
               value={hapticFeedback}
               onValueChange={setHapticFeedback}
-              trackColor={{ false: '#333', true: '#1976d2' }}
+              trackColor={{ false: '#333', true: theme.colors.primary }}
               thumbColor="#fff"
             />
           </View>
@@ -256,7 +258,7 @@ const SettingsScreen = ({ navigation }: Props) => {
             <Switch
               value={highContrast}
               onValueChange={setHighContrast}
-              trackColor={{ false: '#333', true: '#1976d2' }}
+              trackColor={{ false: '#333', true: theme.colors.primary }}
               thumbColor="#fff"
             />
           </View>
@@ -284,7 +286,7 @@ const SettingsScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -293,19 +295,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a2e',
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     padding: 4,
   },
   backText: {
-    color: '#1976d2',
+    color: theme.colors.text.secondary,
     fontSize: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   content: {
     flex: 1,
@@ -314,18 +317,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
     marginTop: 20,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBorder,
+    ...theme.shadows.card,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginBottom: 16,
   },
   languageGrid: {
@@ -337,22 +343,22 @@ const styles = StyleSheet.create({
     width: '48%',
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: '#F5F7FA',
     borderWidth: 1,
-    borderColor: '#2a2a4a',
+    borderColor: theme.colors.border,
   },
   languageOptionActive: {
-    backgroundColor: '#1976d2',
-    borderColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   languageNative: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   languageEnglish: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   languageTextActive: {
@@ -366,11 +372,11 @@ const styles = StyleSheet.create({
   modelName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   modelDescription: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   statusBadge: {
@@ -388,7 +394,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   actionButton: {
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -400,13 +406,13 @@ const styles = StyleSheet.create({
   progressContainer: {
     width: '100%',
     height: 8,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: '#E0E0E0',
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#1976d2',
+    backgroundColor: theme.colors.primary,
   },
   settingRow: {
     flexDirection: 'row',
@@ -416,21 +422,21 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
   settingDescription: {
     fontSize: 12,
-    color: '#888',
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   settingAction: {
     fontSize: 14,
-    color: '#1976d2',
+    color: theme.colors.primary,
     fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#2a2a4a',
+    backgroundColor: theme.colors.border,
     marginVertical: 12,
   },
   aboutRow: {
@@ -440,11 +446,11 @@ const styles = StyleSheet.create({
   },
   aboutLabel: {
     fontSize: 14,
-    color: '#888',
+    color: theme.colors.text.secondary,
   },
   aboutValue: {
     fontSize: 14,
-    color: '#fff',
+    color: theme.colors.text.primary,
   },
 });
 
